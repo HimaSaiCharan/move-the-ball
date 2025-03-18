@@ -1,0 +1,26 @@
+* {
+  padding: 0;
+  height: 0;
+  box-sizing: border-box;
+}
+body{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.screen {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background-color: aliceblue;
+}
+.ball {
+  height: 100px;
+  width: 100px;
+  background-color: red;
+  position: absolute;
+  border-radius: 50%;
+  left: 0px;
+  bottom: 0px;
+}
