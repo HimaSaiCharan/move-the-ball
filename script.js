@@ -1,4 +1,9 @@
-class Ball {
+const debug = (args) => {
+  console.log(args);
+  return args;
+};
+
+class BallModel {
   #x;
   #y;
 
@@ -7,60 +12,135 @@ class Ball {
     this.#y = 0;
   }
 
-  coordinates() {
+  get position() {
     return { x: this.#x, y: this.#y };
   }
 
-  moveUp() {
-    this.#y += 500;
+  moveUp() { this.#y += 100; }
+
+  moveRight() { this.#x += 50; }
+
+  moveDown() { this.#y -= 100; }
+
+  moveLeft() { this.#x -= 50; }
+}
+
+class BallView {
+  #screenWidth;
+  #screenHeight;
+  constructor(element) {
+    this.ball = element;
+    const { height, width } = this.#parentDimensions();
+    this.#screenHeight = height;
+    this.#screenWidth = width;
   }
-  moveRight() {
-    this.#x += 10;
+
+  updatePosition(x, y) {
+    this.ball.style.left = x + "px";
+    this.ball.style.bottom = y + "px";
+  };
+
+  #parentDimensions() {
+    return { height: this.ball.parentElement.style.height, width: this.ball.parentElement.style.width };
   }
-  moveDown() {
-    this.#y -= 10;
+
+}
+
+class BallController {
+  #model;
+  #view;
+  #keys = {
+    "ArrowUp": this.#jump,
+    "ArrowLeft": this.#model.moveLeft,
+    "ArrowRight": this.#model.moveRight,
+    "ArrowRight": this.#model.moveRight,
+  };
+
+  constructor(model, view) {
+    this.#model = model;
+    this.#view = view;
+    this.#startGravity();
   }
-  moveLeft() {
-    this.#x -= 10;
+
+  #updateView() {
+    const { x, y } = this.#model.position;
+    this.#view.updatePosition(x, y);
+  }
+
+  handleMove(event) {
+    if (!(event.key in this.#keys)) return;
+
+    if (this.#model.position.y === 0) {
+      this.#keys[event.key]();
+      this.#updateView();
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      this.#left();
+      return;
+    }
+
+    if (event.key === "ArrowRight") {
+      this.#right();
+      return;
+    }
+  }
+
+  #jump() {
+    let jumpHeight = 0;
+    const jumpInterval = setInterval(() => {
+      if (jumpHeight >= 20) {
+        clearInterval(jumpInterval);
+        return;
+      }
+      this.#model.moveUp();
+      this.#updateView();
+      jumpHeight += 2;
+    }, 1);
+  }
+
+  #left() {
+    const interval = setInterval(() => {
+      if (this.#model.position.y === 0) {
+        clearInterval(interval);
+        return;
+      }
+      this.#model.moveLeft();
+      this.#updateView();
+    }, 50);
+  }
+
+  #right() {
+    const interval = setInterval(() => {
+      if (this.#model.position.y === 0) {
+        clearInterval(interval);
+        return;
+      }
+      this.#model.moveRight();
+      this.#updateView();
+    }, 50);
+  }
+
+  #startGravity() {
+    setInterval(() => {
+      if (this.#model.position.y > 0) {
+        this.#model.moveDown();
+        this.#updateView();
+      }
+    }, 50);
   }
 }
 
-const updateBallPosition = (x, y) => {
-  console.log(x, y);
-  const ball = document.querySelector("#ball");
-  ball.style.left = x + "px";
-  ball.style.bottom = y + "px";
-  console.log(ball.style);
-};
-
-const moves = {
-  ArrowUp(ball) {
-    ball.moveUp();
-  },
-  ArrowRight(ball) {
-    ball.moveRight();
-  },
-  ArrowDown(ball) {
-    ball.moveDown();
-  },
-  ArrowLeft(ball) {
-    ball.moveLeft();
-  }
-};
-
-const moveBall = (event, ball) => {
-  if (moves[event.key]) {
-    moves[event.key](ball);
-    const { x, y } = ball.coordinates();
-    updateBallPosition(x, y);
-  }
-};
-
 const main = () => {
-  const ball = new Ball();
+  const ball = document.querySelector("#ball");
   const screen = document.querySelector("#screen");
-  screen.addEventListener("keydown", (event) => moveBall(event, ball));
-  console.log(screen);
+  const ballModel = new BallModel();
+  const ballView = new BallView(ball);
+  const ballController = new BallController(ballModel, ballView);
+
+  screen.addEventListener("keydown", (event) => ballController.handleMove(event));
+  screen.focus();
 };
 
 main();
